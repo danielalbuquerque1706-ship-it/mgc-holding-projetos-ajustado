@@ -1,37 +1,33 @@
-import { useState } from 'react';
-import { LogIn } from 'lucide-react';
-import logo from './assets/logo_mgc_holding_transparent.png';
+import { useState } from "react";
+import { LogIn } from "lucide-react";
+import logo from "./assets/logo_mgc_holding_transparent.png";
+import { supabase } from "./lib/supabase";
 
 function Login({ onLogin }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Verificar credenciais
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    
-    // Adicionar usuário administrador padrão se não existir
-    if (users.length === 0) {
-      users.push({
-        username: 'Projetosmgc_2025',
-        password: 'Proje@2025',
-        isAdmin: true
-      });
-      localStorage.setItem('users', JSON.stringify(users));
+    setError("");
+
+    // LOGIN VIA SUPABASE
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    if (error) {
+      setError("E-mail ou senha inválidos");
+      return;
     }
-    
-    const user = users.find(u => u.username === username && u.password === password);
-    
-    if (user) {
-      sessionStorage.setItem('isAuthenticated', 'true');
-      sessionStorage.setItem('currentUser', JSON.stringify(user));
-      onLogin();
-    } else {
-      setError('Usuário ou senha inválidos');
-    }
+
+    // Guardar usuário logado
+    sessionStorage.setItem("isAuthenticated", "true");
+    sessionStorage.setItem("currentUser", JSON.stringify(data.user));
+
+    onLogin();
   };
 
   return (
@@ -46,14 +42,14 @@ function Login({ onLogin }) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Usuário
+              E-mail
             </label>
             <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="Digite seu usuário"
+              placeholder="Digite seu e-mail"
               required
             />
           </div>
@@ -97,4 +93,3 @@ function Login({ onLogin }) {
 }
 
 export default Login;
-
